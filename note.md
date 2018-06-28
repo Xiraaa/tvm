@@ -152,7 +152,7 @@ Build and Installation
 -----
 
 
-<a name="buildapk">Build APK</a>
+* Build APK
 `COMMENTS:gradle for bulid apk (Set environment value JAVA_HOME = ~/jdk1.8 PATH=$PATH:JAVA_HOME/bin)`\
 `jdk1.8 is compatible for maven3 and gradle to run`\
 We use [Gradle](https://gradle.org) to build. Please follow [the installation instruction](https://gradle.org/install) for your operating system.
@@ -185,7 +185,7 @@ In `app/build/outputs/apk` you'll find `app-release-unsigned.apk`, use `dev_tool
 
 Upload `tvmrpc-release.apk` to your Android device and install it.
 
-### Build with OpenCL
+* Build with OpenCL
 
 This application does not link any OpenCL library unless you configure it to. In `app/src/main/jni/make` you will find JNI Makefile config `config.mk`. Copy it to `app/src/main/jni` and modify it.
 
@@ -217,8 +217,8 @@ ADD_LDLIBS = /Users/xin/Documents/x-lab/Android/libOpenCL.so
 
 
 
-+ In which, ADD_C_INCLUDES is the standard OpenCL headers, you can download from: https://github.com/KhronosGroup/OpenCL-Headers
-+ In which, ADD_LDLIBS is the mobile phone's opencl lib, You can use adb pull to get the file to your MacBook:
+* In which, ADD_C_INCLUDES is the standard OpenCL headers, you can download from: https://github.com/KhronosGroup/OpenCL-Headers
+* In which, ADD_LDLIBS is the mobile phone's opencl lib, You can use adb pull to get the file to your MacBook:
 
 		adb pull /system/vendor/lib64/libOpenCL.so ./
 Now use NDK to generate standalone toolchain for your device. For my test device, I use following command:
@@ -227,14 +227,16 @@ Note that you should specify the correct GPU development headers for your androi
 
 After you setup the `config.mk`, follow the instructions in [Build APK](#buildapk) to build the Android package.
 
-## Cross Compile and Run on Android Devices
+Cross Compile and Run on Android Devices
+ ==========
 
-### Architecture and Android Standalone Toolchain
+Architecture and Android Standalone Toolchain
+--------
 
 In order to cross compile a shared library (.so) for your android device, you have to know the target triple for the device. (Refer to [Cross-compilation using Clang](https://clang.llvm.org/docs/CrossCompilation.html) for more information). Run `adb shell cat /proc/cpuinfo` to list the device's CPU information.
 
 Now use NDK to generate standalone toolchain for your device. For my test device, I use following command.
-
+		`COMMENTS:find make-standalone-toolchain.sh in ndk`
 ```bash
 cd /opt/android-ndk/build/tools/
 ./make-standalone-toolchain.sh --platform=android-26 --use-llvm --arch=arm64 --install-dir=/opt/android-toolchain-arm64
@@ -242,11 +244,21 @@ cd /opt/android-ndk/build/tools/
 
 If everything goes well, you will find compile tools in `/opt/android-toolchain-arm64/bin`. For example, `bin/aarch64-linux-android-g++` can be used to compile C++ source codes and create shared libraries for arm64 Android devices.
 
-### Cross Compile and Upload to the Android Device
+Cross Compile and Upload to the Android Device
+---------
 
 First start a proxy server using `python -m tvm.exec.rpc_proxy` and make your Android device connect to this proxy server via TVM RPC application.
 
 Then checkout [android\_rpc/tests/android\_rpc\_test.py](https://github.com/dmlc/tvm/blob/master/apps/android_rpc/tests/android_rpc_test.py) and run,
+		`COMMENTS: I write this in .py`
+		
+```bash
+os.environ["TVM_ANDROID_RPC_PROXY_HOST"] = "0.0.0.0"
+os.environ["TVM_NDK_CC"] = "/Users/xin/my-android-toolchain/android-toolchain-arm64/bin/aarch64-linux-android-g++"
+proxy_host = os.environ["TVM_ANDROID_RPC_PROXY_HOST"]
+proxy_port = 9090
+key = "android"
+```
 
 ```bash
 # Specify the proxy host
@@ -259,7 +271,7 @@ python android_rpc_test.py
 This will compile TVM IR to shared libraries (CPU and OpenCL) and run vector additon on your Android device. On my test device, it gives following results.
 
 ```bash
-TVM: Initializing cython mode...
+TVM: Initializing cython mode..
 [01:21:43] src/codegen/llvm/codegen_llvm.cc:75: set native vector to be 32 for target aarch64
 [01:21:43] src/runtime/opencl/opencl_device_api.cc:194: Initialize OpenCL platform 'Apple'
 [01:21:43] src/runtime/opencl/opencl_device_api.cc:214: opencl(0)='Iris' cl_device_id=0x1024500
