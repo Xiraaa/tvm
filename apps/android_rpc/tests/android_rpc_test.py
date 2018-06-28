@@ -10,6 +10,9 @@ from tvm.contrib import rpc, util, ndk
 import numpy as np
 
 # Set to be address of tvm proxy.
+
+os.environ["TVM_ANDROID_RPC_PROXY_HOST"] = "0.0.0.0"
+os.environ["TVM_NDK_CC"] = "/Users/xin/my-android-toolchain/android-toolchain-arm64/bin/aarch64-linux-android-g++"
 proxy_host = os.environ["TVM_ANDROID_RPC_PROXY_HOST"]
 proxy_port = 9090
 key = "android"
