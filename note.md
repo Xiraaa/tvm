@@ -237,20 +237,42 @@ If everything goes well, you will find compile tools in `/opt/android-toolchain-
 Cross Compile and Upload to the Android Device
 ---------
 
-First start a proxy server using `python -m tvm.exec.rpc_proxy` and make your Android device connect to this proxy server via TVM RPC application.
+First start a proxy server using 
+```
+$ python -m tvm.exec.rpc_proxy
 
+COMMENTS:
+And this will show off:
+INFO:root:RPCProxy: client port bind to 0.0.0.0:9090
+INFO:root:RPCProxy: Websock port bind to 8888
+
+``` 
+and make your Android device connect to this proxy server via TVM RPC application.
+
+```
+COMMENTS:
+Open the Android app and type in the IP addr/port/key you set in python script.
+You may need $ ifconfig to see IP addr.
+If the Android device is connect, it will show:
+
+INFO:root:RPCProxy: client port bind to 0.0.0.0:9090
+INFO:root:RPCProxy: Websock port bind to 8888
+INFO:root:Handler ready TCPSocketProxy:10.66.65.194:server:android
+
+```
 Then checkout [android\_rpc/tests/android\_rpc\_test.py](https://github.com/dmlc/tvm/blob/master/apps/android_rpc/tests/android_rpc_test.py) and run,
-		`COMMENTS: I write this in .py`
+		``
 		
-```bash
+```
+COMMENTS: I write this in .py
 os.environ["TVM_ANDROID_RPC_PROXY_HOST"] = "0.0.0.0"
 os.environ["TVM_NDK_CC"] = "/Users/xin/my-android-toolchain/android-toolchain-arm64/bin/aarch64-linux-android-g++"
 proxy_host = os.environ["TVM_ANDROID_RPC_PROXY_HOST"]
 proxy_port = 9090
 key = "android"
 ```
-
-```bash
+or you can do as follow
+```
 # Specify the proxy host
 export TVM_ANDROID_RPC_PROXY_HOST=0.0.0.0
 # Specify the standalone Android C++ compiler
