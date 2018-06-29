@@ -14,10 +14,11 @@ To get started, clone tvm repo from github. It is important to clone the submodu
 
 ```
 COMMENTS:
-To use maven3 and gradle
 To get jdk path: /usr/libexec/java_home -V
-Set env value JAVA_HOME = path/to/jdk1.8
-PATH=$PATH:JAVA_HOME/bin
+To use maven3 and gradle
+Set env value:
+export JAVA_HOME = path/to/jdk1.8
+export PATH=$PATH:JAVA_HOME/bin
 ```
 
 
@@ -46,7 +47,8 @@ We use cmake to build the library.
 The configuration of tvm can be modified by `config.cmake`.
 
 
-- First, check the cmake in your system, you do not have cmake   ```COMMENTS: brew cmake```
+- First, check the cmake in your system, you do not have cmake   
+```COMMENTS: brew install cmake```
   you can obtain the latest version from [official website](https://cmake.org/download/)
 - First create a build directory, copy the ``cmake/config.cmake`` to the directory.
 
@@ -122,9 +124,11 @@ Android TVM RPC
 ========
 
 This folder contains Android RPC app that allows us to launch an rpc server on a Android device and connect to it through python script and do testing on the python side as normal TVM RPC.
-```COMMENTS: 
+```
+COMMENTS: 
 Download NDK for toolchain
-
+You may need set env value: 
+export PATH=/Users/xin/Library/Android/sdk/ndk-bundle:$PATH
 ```
 You will need JDK, [Android NDK](https://developer.android.com/ndk) and an Android device to use this.
 
@@ -135,8 +139,8 @@ Build and Installation
 * Build APK
 ```
 COMMENTS:
-brew gradle
-gradle for bulid apk (Set environment value JAVA_HOME = ~/jdk1.8 PATH=$PATH:JAVA_HOME/bin)
+brew install gradle
+gradle for bulid apk (Set environment value export JAVA_HOME = ~/jdk1.8 PATH=$PATH:JAVA_HOME/bin)
 jdk1.8 is compatible for maven3 and gradle to run
 ```
 We use [Gradle](https://gradle.org) to build. Please follow [the installation instruction](https://gradle.org/install) for your operating system.
@@ -191,8 +195,6 @@ https://github.com/KhronosGroup/OpenCL-Headers
 #In which, ADD_LDLIBS is the mobile phone's opencl lib, You can use adb pull to get the file to your MacBook:
 adb pull /system/vendor/lib64/libOpenCL.so ./
 ```
-
-Now use NDK to generate standalone toolchain for your device. For my test device, I use following command:
 
 Note that you should specify the correct GPU development headers for your android device. Run `adb shell dumpsys | grep GLES` to find out what GPU your android device uses. It is very likely the library (libOpenCL.so) is already present on the mobile device. For instance, I found it under `/system/vendor/lib64`. You can do `adb pull /system/vendor/lib64/libOpenCL.so ./` to get the file to your desktop.
 
