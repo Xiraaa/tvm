@@ -12,12 +12,13 @@ To get started, clone tvm repo from github. It is important to clone the submodu
 
     git clone --recursive https://github.com/dmlc/tvm
 
-For windows users who use github tools, you can open the git shell, and type the following command.
-
-
-    
-    git submodule init
-    git submodule update
+```
+COMMENTS:
+To use maven3 and gradle
+To get jdk path: /usr/libexec/java_home -V
+Set env value JAVA_HOME = path/to/jdk1.8
+PATH=$PATH:JAVA_HOME/bin
+```
 
 
 Build the Shared Library
@@ -29,7 +30,7 @@ Our goal is to build the shared libraries:
 - On OSX the target library are `libtvm.dylib, libtvm_topi.dylib`
 - On Windows the target library are `libtvm.dll, libtvm_topi.dll`
 
-`COMMENTS: I didn't use this`
+`COMMENTS: I didn't use this but followed the previous instruction`
 
     sudo apt-get update
     sudo apt-get install -y python python-dev python-setuptools gcc libtinfo-dev zlib1g-dev
@@ -45,16 +46,17 @@ We use cmake to build the library.
 The configuration of tvm can be modified by `config.cmake`.
 
 
-- First, check the cmake in your system, you do not have cmake   `COMMENTS: brew cmake`\
+- First, check the cmake in your system, you do not have cmake   ```COMMENTS: brew cmake```
   you can obtain the latest version from [official website](https://cmake.org/download/)
 - First create a build directory, copy the ``cmake/config.cmake`` to the directory.
 
  
 		
+      cd ~/tvm 
       mkdir build
       cp cmake/config.cmake build
 	  
-      COMMETS: cd tvm && Three main changes
+      COMMETS: Three main changes to use llvm, rpc and opencl
       set(USE_LLVM /Users/xin/Documents/x-lab/llvm/bin/llvm-config)
       set(USE_RPC ON)
       set(USE_OPENCL ON)
@@ -78,7 +80,6 @@ The configuration of tvm can be modified by `config.cmake`.
 
 - We can then build tvm and related libraries.
 
-
       cd build
       cmake ..
       make -j4
@@ -86,32 +87,6 @@ The configuration of tvm can be modified by `config.cmake`.
 If everything goes well, we can go to the specific language installation section.
 
 
-Building on Windows
-~~~~~~~~~~~~~~~~~~~
-
-TVM support build via MSVC using cmake. The minimum required VS version is **Visual Studio Community 2015 Update 3**.
-In order to generate the VS solution file using cmake,
-make sure you have a recent version of cmake added to your path and then from the tvm directory:
-
-.. code:: bash
-
-  mkdir build
-  cd build
-  cmake -G "Visual Studio 14 2015 Win64" -DCMAKE_BUILD_TYPE=Release -DCMAKE_CONFIGURATION_TYPES="Release" ..
-
-This will generate the VS project using the MSVC 14 64 bit generator.
-Open the .sln file in the build directory and build with Visual Studio.
-In order to build with LLVM in windows, you will need to build LLVM from source.
-You need to run build the nnvm by running the same script under the nnvm folder.
-
-Building ROCm support
-~~~~~~~~~~~~~~~~~~~~~
-
-Currently, ROCm is supported only on linux, so all the instructions are written with linux in mind.
-
-- Set ``set(USE_ROCM ON)``, set ROCM_PATH to the correct path.
-- You need to first install HIP runtime from ROCm. Make sure the installation system has ROCm installed in it.
-- Install latest stable version of LLVM (v6.0.1), and LLD, make sure ``ld.lld`` is available via command line.
 
 Python Package Installation
 ---------------------------
@@ -136,7 +111,9 @@ There are several ways to install the package:
        # NOTE: if you installed python via homebrew, --user is not needed during installaiton
        #       it will be automatically installed to your user directory.
        #       providing --user flag may trigger error during installation in such case.
+       
        export MACOSX_DEPLOYMENT_TARGET=10.9  # This is required for mac to avoid symbol conflicts with libstdc++
+       cd tvm
        cd python; python setup.py install --user; cd ..
        cd topi/python; python setup.py install --user; cd ../..
        cd nnvm/python; python setup.py install --user; cd ../..
@@ -145,7 +122,10 @@ Android TVM RPC
 ========
 
 This folder contains Android RPC app that allows us to launch an rpc server on a Android device and connect to it through python script and do testing on the python side as normal TVM RPC.
-`COMMENTS: NDK for toolchain`\
+```COMMENTS: 
+Download NDK for toolchain
+
+```
 You will need JDK, [Android NDK](https://developer.android.com/ndk) and an Android device to use this.
 
 Build and Installation
@@ -153,8 +133,12 @@ Build and Installation
 
 
 * Build APK
-`COMMENTS:gradle for bulid apk (Set environment value JAVA_HOME = ~/jdk1.8 PATH=$PATH:JAVA_HOME/bin)`\
-`jdk1.8 is compatible for maven3 and gradle to run`\
+```
+COMMENTS:
+brew gradle
+gradle for bulid apk (Set environment value JAVA_HOME = ~/jdk1.8 PATH=$PATH:JAVA_HOME/bin)
+jdk1.8 is compatible for maven3 and gradle to run
+```
 We use [Gradle](https://gradle.org) to build. Please follow [the installation instruction](https://gradle.org/install) for your operating system.
 
 Before you build the Android application, please refer to [TVM4J Installation Guide](https://github.com/dmlc/tvm/blob/master/jvm/README.md) and install tvm4j-core to your local maven repository. You can find tvm4j dependency declare in `app/build.gradle`. Modify it if it is necessary.
@@ -173,17 +157,6 @@ dependencies {
 }
 ```
 
-Now use Gradle to compile JNI, resolve Java dependencies and build the Android application together with tvm4j. Run following script to generate the apk file.
-
-```bash
-export ANDROID_HOME=[Path to your Android SDK, e.g., ~/Android/sdk]
-cd apps/android_rpc
-gradle clean build
-```
-
-In `app/build/outputs/apk` you'll find `app-release-unsigned.apk`, use `dev_tools/gen_keystore.sh` to generate a signature and use `dev_tools/sign_apk.sh` to get the signed apk file `app/build/outputs/apk/tvmrpc-release.apk`.
-
-Upload `tvmrpc-release.apk` to your Android device and install it.
 
 * Build with OpenCL
 
@@ -194,7 +167,7 @@ cd apps/android_rpc/app/src/main/jni
 cp make/config.mk .
 ```
 
-Here's a piece of example for `config.mk`.
+Here's my setting for `config.mk`.
 
 ```makefile
 APP_ABI = arm64-v8a
@@ -211,21 +184,36 @@ ADD_C_INCLUDES = /Users/xin/Documents/x-lab/Android/OpenCL-Headers
 ADD_LDLIBS = /Users/xin/Documents/x-lab/Android/libOpenCL.so
 ```
 
+```
+COMMENTS:
+#In which, ADD_C_INCLUDES is the standard OpenCL headers, you can download from: 
+https://github.com/KhronosGroup/OpenCL-Headers
+#In which, ADD_LDLIBS is the mobile phone's opencl lib, You can use adb pull to get the file to your MacBook:
+adb pull /system/vendor/lib64/libOpenCL.so ./
+```
 
-
-
-
-
-
-* In which, ADD_C_INCLUDES is the standard OpenCL headers, you can download from: https://github.com/KhronosGroup/OpenCL-Headers
-* In which, ADD_LDLIBS is the mobile phone's opencl lib, You can use adb pull to get the file to your MacBook:
-
-		adb pull /system/vendor/lib64/libOpenCL.so ./
 Now use NDK to generate standalone toolchain for your device. For my test device, I use following command:
 
 Note that you should specify the correct GPU development headers for your android device. Run `adb shell dumpsys | grep GLES` to find out what GPU your android device uses. It is very likely the library (libOpenCL.so) is already present on the mobile device. For instance, I found it under `/system/vendor/lib64`. You can do `adb pull /system/vendor/lib64/libOpenCL.so ./` to get the file to your desktop.
 
-After you setup the `config.mk`, follow the instructions in [Build APK](#buildapk) to build the Android package.
+After you setup the `config.mk`, follow the instructions below to build the Android package.
+
+Now use Gradle to compile JNI, resolve Java dependencies and build the Android application together with tvm4j. Run following script to generate the apk file.
+
+```bash
+export ANDROID_HOME=[Path to your Android SDK, e.g., ~/Android/sdk]
+cd apps/android_rpc
+gradle clean build
+```
+
+```
+COMMENTS:
+It's okay for use debug.apk to test. And remember to uninstall the previous app before reinstall.
+```
+
+In `app/build/outputs/apk` you'll find `app-release-unsigned.apk`, use `dev_tools/gen_keystore.sh` to generate a signature and use `dev_tools/sign_apk.sh` to get the signed apk file `app/build/outputs/apk/tvmrpc-release.apk`.
+
+Upload `tvmrpc-release.apk` to your Android device and install it.
 
 Cross Compile and Run on Android Devices
  ==========
