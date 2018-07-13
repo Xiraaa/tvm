@@ -295,3 +295,66 @@ Run CPU test ...
 ```
 
 You can define your own TVM operators and test via this RPC app on your Android device to find the most optimized TVM schedule.
+
+Run MobileNet on Android devices
+========
+- This test is modified from [Benchmarking Deep Neural Networks on ARM CPU/GPU](https://github.com/merrymercy/tvm-mali)
+- The test code is [MobileNet_AS_RPC.py](https://github.com/Xiraaa/tvm/blob/master/tutorials/mobileNet_AS_RPC.py)
+- If you successfully run the test in the previous part, you just need to modify part of the code.
+1. Set to be address of tvm proxy.
+```
+os.environ["TVM_ANDROID_RPC_PROXY_HOST"] = "0.0.0.0"
+os.environ["TVM_NDK_CC"] = "/Users/xin/my-android-toolchain/android-toolchain-arm64/bin/aarch64-linux-android-g++"
+proxy_host = os.environ["TVM_ANDROID_RPC_PROXY_HOST"]
+proxy_port = 9090
+key = "android"
+```
+2. Change target configuration. Run `adb shell cat /proc/cpuinfo` to find the arch.
+```
+arch = "arm64"
+target = "llvm -target=%s-linux-android" % arch
+```
+3. Load model(Existing bug: Setting dtype = "float16" leads to crash)
+```
+net, params = nnvm.testing.mobilenet.get_workload(
+        batch_size=1, image_shape=image_shape, dtype=dtype)
+```
+4. Compile
+```
+opt_level = 2 if dtype == 'float32' else 1
+with nnvm.compiler.build_config(opt_level=opt_level):
+graph, lib, params = nnvm.compiler.build(
+    net, tvm.target.mali(), shape={"data": data_shape}, params=params,
+    dtype=dtype, target_host=target)
+```
+
+5. Upload model to remote device(The extension of export file must be .so)
+```
+tmp = util.tempdir()
+lib_fname = tmp.relpath('net.so')
+lib.export_library(lib_fname, ndk.create_shared)
+
+remote = rpc.connect(proxy_host, proxy_port, key=key)
+remote.upload(lib_fname)
+ctx = remote.cl(0)
+rlib = remote.load_module('net.so')
+rparams = {k: tvm.nd.array(v, ctx) for k, v in params.items()}
+print('Run GPU test ...')
+```
+6. Create graph runtime
+```
+module = runtime.create(graph, rlib, ctx)
+module.set_input('data', tvm.nd.array(np.random.uniform(size=(data_shape)).astype(dtype)))
+module.set_input(**rparams)
+```
+
+7. The num of runs for warm up and test(Exsiting bug: when num_test is over 300, program will crash)
+```
+num_warmup = 50
+num_test   = 300
+warm_up_timer = module.module.time_evaluator("run", ctx, num_warmup)
+warm_up_timer()
+ftimer = module.module.time_evaluator("run", ctx, num_test)
+prof_res = ftimer()
+print("backend: TVM-mali\tmodel: %s\tdtype: %s\tcost:%.4f" % ("mobileNet", dtype, prof_res.mean))
+```
